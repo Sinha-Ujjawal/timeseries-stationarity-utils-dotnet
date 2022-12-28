@@ -22,7 +22,7 @@ This is a small library written in [C#](https://learn.microsoft.com/en-us/dotnet
 TimeSeriesStationaryUtils.Algorithm.KPSS(
     timeSeries: yourTimeSeries, // double[] array
     isStationaryAroundTrend: false, // by default, Is Stationary Around Constant would be used
-    int nlags = -1 // <0: Auto (using Hobijn et al (1998)), 0: Legacy, >0: number of lags used
+    nlags = -1 // <0: Auto (using Hobijn et al (1998)), 0: Legacy, >0: number of lags used
 )
 ```
 
