@@ -14,7 +14,17 @@ This is a small library written in [C#](https://learn.microsoft.com/en-us/dotnet
 
 **_Use at your own risks. I haven't tested the library thoroughly._**
 
-## Getting Started
+## Usage
+
+### KPSS (Kwiatkowski-Phillips-Schmidt-Shin)
+
+```C#
+TimeSeriesStationaryUtils.Algorithm.KPSS(
+    timeSeries: yourTimeSeries, // double[] array
+    isStationaryAroundTrend: false, // by default, Is Stationary Around Constant would be used
+    int nlags = -1 // <0: Auto (using Hobijn et al (1998)), 0: Legacy, >0: number of lags used
+)
+```
 
 ## Copyrights
 
