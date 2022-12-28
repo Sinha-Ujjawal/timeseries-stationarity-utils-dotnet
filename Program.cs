@@ -62,6 +62,7 @@ namespace TimeSeriesStationaryUtils
         /// Computes the number of lags for covariance matrix estimation in KPSS test
         /// using method of Hobijn et al (1998). See also Andrews (1991), Newey & West
         /// (1994), and Schwert (1989). Assumes Bartlett / Newey-West kernel.
+        /// Taken from https://github.com/statsmodels/statsmodels/blob/142287c84a0afc80abbf57bb8fb2ec215a0af066/statsmodels/tsa/stattools.py#L2094
         /// </summary>
         private static int KPSSAutoLag(Vector<double> resids, int nobs)
         {
@@ -86,6 +87,7 @@ namespace TimeSeriesStationaryUtils
         /// <summary>
         /// Computes equation 10, p. 164 of Kwiatkowski et al. (1992). This is the
         /// consistent estimator for the variance.
+        /// Taken from https://github.com/statsmodels/statsmodels/blob/142287c84a0afc80abbf57bb8fb2ec215a0af066/statsmodels/tsa/stattools.py#L2082
         /// </summary>
         private static double SigmaEstKPSS(Vector<double> resids, int nobs, int nlags)
         {
@@ -146,7 +148,7 @@ namespace TimeSeriesStationaryUtils
         /// Kwiatkowski-Phillips-Schmidt-Shin test for stationarity.
         /// Computes the Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test for the null
         /// hypothesis that x is level or trend stationary.
-        /// Taken from python Statsmodels: https://github.com/statsmodels/statsmodels/blob/main/statsmodels/tsa/stattools.py
+        /// Taken from python Statsmodels: https://github.com/statsmodels/statsmodels/blob/142287c84a0afc80abbf57bb8fb2ec215a0af066/statsmodels/tsa/stattools.py#L1912
         /// </summary>
         public static KPSSTestStatistic KPSS(
             double[] timeSeries, // time series array
