@@ -3,7 +3,7 @@ namespace TimeSeriesStationaryUtils
     using MathNet.Numerics.LinearAlgebra;
     using MathNet.Numerics.Distributions;
 
-    public sealed class ACF
+    public static class ACF
     {
         public struct ACFStatistic
         {

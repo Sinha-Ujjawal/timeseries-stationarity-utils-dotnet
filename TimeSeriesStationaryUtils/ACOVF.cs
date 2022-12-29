@@ -3,7 +3,7 @@ namespace TimeSeriesStationaryUtils
     using MathNet.Numerics.LinearAlgebra;
     using MathNet.Numerics.IntegralTransforms;
 
-    public sealed class ACOVF
+    public static class ACOVF
     {
         /// <summary>
         /// Find the next regular number greater than or equal to target.

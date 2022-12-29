@@ -2,7 +2,7 @@ namespace TimeSeriesStationaryUtils
 {
     using MathNet.Numerics.Distributions;
 
-    public sealed class QStat
+    public static class QStat
     {
         public struct QStatistics
         {

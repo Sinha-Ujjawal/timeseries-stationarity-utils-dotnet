@@ -4,7 +4,7 @@ namespace TimeSeriesStationaryUtils
     using MathNet.Numerics.LinearRegression;
     using MathNet.Numerics.LinearAlgebra;
 
-    public sealed class KPSS
+    public static class KPSS
     {
         /// <summary>
         /// Computes the number of lags for covariance matrix estimation in KPSS test
