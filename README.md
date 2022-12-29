@@ -19,7 +19,7 @@ This is a small library written in [C#](https://learn.microsoft.com/en-us/dotnet
 ### KPSS (Kwiatkowski-Phillips-Schmidt-Shin)
 
 ```C#
-TimeSeriesStationaryUtils.Algorithm.KPSS(
+TimeSeriesStationaryUtils.KPSS.Run(
     timeSeries: yourTimeSeries, // double[] array
     isStationaryAroundTrend: false, // by default, Is Stationary Around Constant would be used
     nlags = -1 // <0: Auto (using Hobijn et al (1998)), 0: Legacy, >0: number of lags used
@@ -29,7 +29,7 @@ TimeSeriesStationaryUtils.Algorithm.KPSS(
 ### ACF (Auto Correlation Function)
 
 ```C#
-TimeSeriesStationaryUtils.Algorithm.ACF(
+TimeSeriesStationaryUtils.ACF.Run(
     timeSeries: yourTimeSeries,  // double[] array
     adjusted: false, // If True, then denominators for autocovariance are n-k, otherwise n.
     nlags: null,
