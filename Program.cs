@@ -688,6 +688,46 @@ class Tests
         AlmostEqual(acfTestStatistic.acf.AsVector(), acfTestStatisticExpected.acf.AsVector());
     }
 
+    public void testingACFWithNLags()
+    {
+        var acfTestStatistic = Algorithm.ACF(
+            timeSeries: sunActivities,
+            nlags: 10
+        );
+        var acfTestStatisticExpected = new Algorithm.ACFStatistic(
+            acf: new double[] {
+                1.0,
+                0.8202012944200224,
+                0.4512684920095677,
+                0.03957655157031838,
+                -0.2757919611176017,
+                -0.42523943082377474,
+                -0.3765950895240612,
+                -0.1573739132894518,
+                0.1582025356911707,
+                0.4730975308980598,
+                0.6589800155363379
+            }
+        );
+        AlmostEqual(acfTestStatistic.acf.AsVector(), acfTestStatisticExpected.acf.AsVector());
+        acfTestStatistic = Algorithm.ACF(
+            timeSeries: sunActivities,
+            nlags: 7
+        );
+        acfTestStatisticExpected = new Algorithm.ACFStatistic(
+            acf: new double[] {
+                1.0,
+                0.8202012944200224,
+                0.4512684920095677,
+                0.03957655157031838,
+                -0.2757919611176017,
+                -0.42523943082377474,
+                -0.3765950895240612,
+                -0.1573739132894518
+            }
+        );
+    }
+
     public void testingACFWithAlphaPoint05Bartlett()
     {
         var acfTestStatistic = Algorithm.ACF(
@@ -1224,6 +1264,8 @@ class Tests
         Console.WriteLine("Testing ACF");
         Console.WriteLine(" Testing ACF with default settings");
         this.testingACFDefault();
+        Console.WriteLine(" Testing ACF explicit number of lags");
+        this.testingACFWithNLags();
         Console.WriteLine(" Testing ACF with Alpha 0.05, using Bartlett's formula");
         this.testingACFWithAlphaPoint05Bartlett();
         Console.WriteLine(" Testing ACF with Alpha 0.05, not using Bartlett's formula");
