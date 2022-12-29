@@ -26,6 +26,40 @@ TimeSeriesStationaryUtils.Algorithm.KPSS(
 )
 ```
 
+### ACF (Auto Correlation Function)
+
+```C#
+TimeSeriesStationaryUtils.Algorithm.ACF(
+    timeSeries: yourTimeSeries,  // double[] array
+    adjusted: false, // If True, then denominators for autocovariance are n-k, otherwise n.
+    nlags: null,
+    // Number of lags to return autocorrelation for. If not provided,
+    // uses min(10 * np.log10(nobs), nobs - 1). The returned value
+    // includes lag 0 (ie., 1) so size of the acf vector is (nlags + 1,).
+    qstat: false, // If True, returns the Ljung-Box q statistic for each autocorrelation coefficient.
+    alpha: null,
+    // If a number is given, the confidence intervals for the given level are
+    // returned. For instance if alpha=.05, 95 % confidence intervals are
+    // returned where the standard deviation is computed according to
+    // Bartlett"s formula.
+    bartlettConfInt: true
+    // Confidence intervals for ACF values are generally placed at 2
+    // standard errors around r_k. The formula used for standard error
+    // depends upon the situation. If the autocorrelations are being used
+    // to test for randomness of residuals as part of the ARIMA routine,
+    // the standard errors are determined assuming the residuals are white
+    // noise. The approximate formula for any lag is that standard error
+    // of each r_k = 1/sqrt(N).
+    // For the ACF of raw data, the standard error at a lag k is
+    // found as if the right model was an MA(k-1). This allows the possible
+    // interpretation that if all autocorrelations past a certain lag are
+    // within the limits, the model might be an MA of order defined by the
+    // last significant autocorrelation. In this case, a moving average
+    // model is assumed for the data and the standard errors for the
+    // confidence intervals should be generated using Bartlett's formula.
+)
+```
+
 ## Copyrights
 
 Licensed under [@MIT](./LICENSE)
