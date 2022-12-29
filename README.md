@@ -7,7 +7,7 @@ This is a small library written in [C#](https://learn.microsoft.com/en-us/dotnet
 | Alogorithm                                                                                                                                                  | Implemented |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | [KPSS (Kwiatkowski-Phillips-Schmidt-Shin)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.kpss.html#statsmodels.tsa.stattools.kpss) | ✓           |
-| [ACF (Auto Correlation Function)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.acf.html#statsmodels.tsa.stattools.acf)            | TODO        |
+| [ACF (Auto Correlation Function)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.acf.html#statsmodels.tsa.stattools.acf)            | ✓         |
 | [STL (Season-Trend decomposition using LOESS)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL) | TODO        |
 
 ## Note
