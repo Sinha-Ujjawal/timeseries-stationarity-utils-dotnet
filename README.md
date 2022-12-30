@@ -8,7 +8,8 @@ This is a small library written in [C#](https://learn.microsoft.com/en-us/dotnet
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
 | [KPSS (Kwiatkowski-Phillips-Schmidt-Shin)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.kpss.html#statsmodels.tsa.stattools.kpss) | ✓           |
 | [ACF (Auto Correlation Function)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.acf.html#statsmodels.tsa.stattools.acf)            | ✓         |
-| [STL (Season-Trend decomposition using LOESS)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL) | TODO        |
+| [STL (Season-Trend decomposition using LOESS)](https://www.statsmodels.org/stable/generated/statsmodels.tsa.seasonal.STL.html#statsmodels.tsa.seasonal.STL) | In Progress...        |
+| [ADF (Augmented Dickey-Fuller unit root test.))](https://www.statsmodels.org/stable/generated/statsmodels.tsa.stattools.adfuller.html#statsmodels.tsa.stattools.adfuller) | In Progress...        |
 
 ## Note
 
