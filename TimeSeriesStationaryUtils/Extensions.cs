@@ -16,6 +16,18 @@ namespace TimeSeriesStationaryUtils
             }
         }
 
+        public static IEnumerable<T> iterate<T>(
+            Func<T, T> next,
+            T state
+        )
+        {
+            while (true)
+            {
+                yield return state;
+                state = next(state);   
+            }
+        }
+
         public static double DotProduct(this IEnumerable<double> sequence, IEnumerable<double> other)
         {
             return sequence.Zip(other).Select((values, _) => values.First * values.Second).Sum();
@@ -68,12 +80,8 @@ namespace TimeSeriesStationaryUtils
             return sequence.Concat(Enumerable.Repeat(padWith, (int) n)).Take((int) n);
         }
 
-        public static Vector<double> EnsureLength<T>(this Vector<double> vec, uint n, double padWith)
-        {
-            return vec.AsEnumerable().EnsureLength(n: n, padWith: padWith).AsVector();
-        }
-
-        public static Vector<Complex32> EnsureLength<T>(this Vector<Complex32> vec, uint n, Complex32 padWith)
+        public static Vector<T> EnsureLength<T>(this Vector<T> vec, uint n, T padWith)
+        where T : struct, IEquatable<T>, IFormattable
         {
             return vec.AsEnumerable().EnsureLength(n: n, padWith: padWith).AsVector();
         }
@@ -86,6 +94,37 @@ namespace TimeSeriesStationaryUtils
         public static double SquaredSum(this IEnumerable<double> sequence)
         {
             return sequence.Select(value => value * value).Sum();
+        }
+
+        public static double MeanSquaredError(this IEnumerable<double> that, IEnumerable<double> other)
+        {
+            return that.Zip(other).Select(values => Math.Pow(values.Second - values.First, 2)).Average();
+        }
+
+        public static double MeanSquaredError(this Vector<double> that, Vector<double> other)
+        {
+            return (that - other).Select(value => value * value).Average();
+        }
+
+        public static double SumSquaredError(this IEnumerable<double> that, IEnumerable<double> other)
+        {
+            return that.Zip(other).Select(values => values.Second - values.First).Select(value => value * value).Sum();
+        }
+
+        public static double SumSquaredError(this Vector<double> that, Vector<double> other)
+        {
+            return (that - other).Select(value => value * value).Sum();
+        }
+
+        public static Vector<double> MeanSquaredError(this Matrix<double> that, Matrix<double> other)
+        {
+            var squaredErrs = (that - other).PointwisePower(2.0);
+            return squaredErrs.ColumnSums() / squaredErrs.RowCount;
+        }
+        
+        public static bool HasConstantColumn(this Matrix<double> that)
+        {
+            return that.EnumerateColumns().Any(col => col.Minimum() == col.Maximum());
         }
 
         public static Vector<double> RunningSum(this Vector<double> vec)
@@ -114,9 +153,10 @@ namespace TimeSeriesStationaryUtils
             return sequence.Select(value => new Complex32(real: (float) value, imaginary: 0.0f)).AsVector();
         }
 
-        public static Vector<double> AsVector(this IEnumerable<double> sequence)
+        public static Vector<T> AsVector<T>(this IEnumerable<T> sequence)
+        where T : struct, IEquatable<T>, IFormattable
         {
-            return Vector<double>.Build.DenseOfEnumerable(sequence);
+            return Vector<T>.Build.DenseOfEnumerable(sequence);
         }
 
         public static Vector<double> AsVector(this IEnumerable<int> sequence)
@@ -124,19 +164,47 @@ namespace TimeSeriesStationaryUtils
             return Vector<double>.Build.DenseOfEnumerable(sequence.Select(value => value * 1.0));
         }
 
-        public static Vector<Complex32> AsVector(this IEnumerable<Complex32> sequence)
-        {
-            return Vector<Complex32>.Build.DenseOfEnumerable(sequence);
-        }
-
-        public static double[][] As2DArray(this IEnumerable<double> sequence, uint nRows, uint nCols)
+        public static T[][] As2DArray<T>(this IEnumerable<T> sequence, uint nRows, uint nCols)
+        where T : struct, IEquatable<T>, IFormattable
         {
             return sequence.Chunk((int) nCols).ToArray();
         }
 
-        public static Matrix<double> AsMatrix(this IEnumerable<double> sequence, uint nRows, uint nCols)
+        public static Matrix<T> AsMatrix<T>(this IEnumerable<T> sequence, uint nRows, uint nCols)
+        where T : struct, IEquatable<T>, IFormattable
         {
-            return Matrix<double>.Build.DenseOfRowArrays(sequence.As2DArray(nRows, nCols));
+            return Matrix<T>.Build.DenseOfRowArrays(sequence.As2DArray(nRows, nCols));
+        }
+
+        public static Matrix<double> AsMatrix(this IEnumerable<int> sequence, uint nRows, uint nCols)
+        {
+            return Matrix<double>.Build.DenseOfRowArrays(sequence.Select(value => value * 1.0).As2DArray(nRows, nCols));
+        }
+
+        public static Matrix<T> AsMatrix<T>(this IEnumerable<IEnumerable<T>> sequence)
+        where T : struct, IEquatable<T>, IFormattable
+        {
+            return Matrix<T>.Build.DenseOfRowArrays(
+                sequence
+                    .Select(values => values.ToArray())
+                    .ToArray()
+            );
+        }
+
+        public static Matrix<double> AsMatrix(this IEnumerable<IEnumerable<int>> sequence)
+        {
+            return Matrix<double>.Build.DenseOfRowArrays(
+                sequence
+                    .Select(values => values.Select(value => value * 1.0).ToArray())
+                    .ToArray()
+            );
+        }
+
+        public static Matrix<T> WithConstantColumn<T>(this Matrix<T> that, T value)
+        where T : struct, IEquatable<T>, IFormattable
+        {
+            var newColumn = Enumerable.Repeat(value, that.RowCount);
+            return that.Append(newColumn.AsMatrix(nRows: (uint) that.RowCount, nCols: 1));
         }
 
         public static double Truncate(this double val, uint ndigits)
@@ -150,16 +218,85 @@ namespace TimeSeriesStationaryUtils
             return seq.Zip(seq.Skip(1)).Select(values => values.Second - values.First);
         }
 
-        public static uint ntrend(this ADF.Regression that)
+        public static IEnumerable<IEnumerable<double>> Vandermonde(
+            this IEnumerable<double> sequence,
+            uint? n = null,
+            bool increasing = false
+        )
         {
-            if (that == ADF.Regression.N)
+            if (n == null)
+                n = (uint) sequence.LongCount();
+            return (
+                sequence
+                .Select(value => {
+                    return (
+                        Enumerable.Repeat(value, (int) n)
+                            .Scan((prev, next) => prev * next, 1.0)
+                            .Take((int) n)
+                    );
+                })
+                .Select(values => increasing ? values : values.Reverse())
+            );
+        }
+
+        public enum Trend
+        {
+            N,  // "n" : no constant, no trend.
+            C,  // "c" : constant only.
+            T,  // "t": trend only.
+            CT, // "ct" : constant and trend.
+            CTT // "ctt" : constant, and linear and quadratic trend.
+        }
+
+        public static uint ntrend(this Trend that)
+        {
+            if (that == Trend.N)
                 return 0;
-            else if (that == ADF.Regression.C)
+            else if (that == Trend.C || that == Trend.T)
                 return 1;
-            else if (that == ADF.Regression.CT)
+            else if (that == Trend.CT)
                 return 2;
-            else // ADF.Regression.CTT
+            else // ADF.Trend.CTT
                 return 3;
+        }
+
+        /// <summary>
+        /// Add a trend and/or constant to a matrix.
+        /// Taken from https://github.com/statsmodels/statsmodels/blob/142287c84a0afc80abbf57bb8fb2ec215a0af066/statsmodels/tsa/tsatools.py#L38
+        /// </summary>
+        public static Matrix<double> AddTrend(
+            this Matrix<double> that,
+            Trend trend=Trend.C,
+            bool prepend=false
+        )
+        {
+            uint trendOrder;
+            if (trend == Trend.N)
+                return that;
+            else if (trend == Trend.C)
+                trendOrder = 0;
+            else if (trend == Trend.CT || trend == Trend.T)
+                trendOrder = 1;
+            else //if (trend == Trend.CTT)
+                trendOrder = 2;
+            
+            uint nobs = (uint) that.RowCount;
+            var trendArr = (
+                Enumerable.Range(1, (int) nobs)
+                    .Select(value => value * 1.0)
+                    .Vandermonde(n: trendOrder + 1, increasing: false)
+                    // put in order ctt
+                    .Select(values => values.Reverse())
+                    .AsMatrix()
+            );
+            if (trend == Trend.T)
+                trendArr = trendArr.SubMatrix(
+                    rowIndex: 0,
+                    rowCount: trendArr.RowCount,
+                    columnIndex: 1,
+                    columnCount: 1
+                );
+            return prepend ? trendArr.Append(that) : that.Append(trendArr);
         }
 
         public enum Trim
