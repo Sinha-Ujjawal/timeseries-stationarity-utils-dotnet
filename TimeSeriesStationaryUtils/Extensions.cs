@@ -218,6 +218,23 @@ namespace TimeSeriesStationaryUtils
             return seq.Zip(seq.Skip(1)).Select(values => values.Second - values.First);
         }
 
+        public static IEnumerable<double> Powers(double x)
+        {
+            return iterate(s =>  s * x, 1.0);
+        }
+
+        public static double PolyEval(this IEnumerable<double> coeffs, double x)
+        {
+            int n = coeffs.Count();
+            return Powers(x).Take(n).Reverse().Zip(coeffs).Select(values => values.First * values.Second).Sum();
+        }
+
+        public static double PolyEval(this Vector<double> coeffs, double x)
+        {
+            int n = coeffs.Count;
+            return Powers(x).Take(n).Reverse().AsVector().DotProduct(coeffs);
+        }
+
         public static IEnumerable<IEnumerable<double>> Vandermonde(
             this IEnumerable<double> sequence,
             uint? n = null,
@@ -228,75 +245,9 @@ namespace TimeSeriesStationaryUtils
                 n = (uint) sequence.LongCount();
             return (
                 sequence
-                .Select(value => {
-                    return (
-                        Enumerable.Repeat(value, (int) n)
-                            .Scan((prev, next) => prev * next, 1.0)
-                            .Take((int) n)
-                    );
-                })
+                .Select(value => Powers(value).Take((int) n))
                 .Select(values => increasing ? values : values.Reverse())
             );
-        }
-
-        public enum Trend
-        {
-            N,  // "n" : no constant, no trend.
-            C,  // "c" : constant only.
-            T,  // "t": trend only.
-            CT, // "ct" : constant and trend.
-            CTT // "ctt" : constant, and linear and quadratic trend.
-        }
-
-        public static uint ntrend(this Trend that)
-        {
-            if (that == Trend.N)
-                return 0;
-            else if (that == Trend.C || that == Trend.T)
-                return 1;
-            else if (that == Trend.CT)
-                return 2;
-            else // ADF.Trend.CTT
-                return 3;
-        }
-
-        /// <summary>
-        /// Add a trend and/or constant to a matrix.
-        /// Taken from https://github.com/statsmodels/statsmodels/blob/142287c84a0afc80abbf57bb8fb2ec215a0af066/statsmodels/tsa/tsatools.py#L38
-        /// </summary>
-        public static Matrix<double> AddTrend(
-            this Matrix<double> that,
-            Trend trend=Trend.C,
-            bool prepend=false
-        )
-        {
-            uint trendOrder;
-            if (trend == Trend.N)
-                return that;
-            else if (trend == Trend.C)
-                trendOrder = 0;
-            else if (trend == Trend.CT || trend == Trend.T)
-                trendOrder = 1;
-            else //if (trend == Trend.CTT)
-                trendOrder = 2;
-            
-            uint nobs = (uint) that.RowCount;
-            var trendArr = (
-                Enumerable.Range(1, (int) nobs)
-                    .Select(value => value * 1.0)
-                    .Vandermonde(n: trendOrder + 1, increasing: false)
-                    // put in order ctt
-                    .Select(values => values.Reverse())
-                    .AsMatrix()
-            );
-            if (trend == Trend.T)
-                trendArr = trendArr.SubMatrix(
-                    rowIndex: 0,
-                    rowCount: trendArr.RowCount,
-                    columnIndex: 1,
-                    columnCount: 1
-                );
-            return prepend ? trendArr.Append(that) : that.Append(trendArr);
         }
 
         public enum Trim

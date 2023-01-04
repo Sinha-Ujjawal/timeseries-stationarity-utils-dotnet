@@ -134,7 +134,8 @@ namespace TimeSeriesStationaryUtils
             Vector<double> ys,
             bool addConstant = false,
             // also fit the intercept by adding a constant column containing all 1.0s
-            QRMethod qRMethod = QRMethod.Full
+            QRMethod qRMethod = QRMethod.Thin
+            // qRMethod to use, QRMethod.Thin is the fastest
         )
         {
             if (addConstant)
@@ -150,12 +151,12 @@ namespace TimeSeriesStationaryUtils
         public struct AutoLagResult
         {
             public readonly double icbest;
-            public readonly double bestlag;
+            public readonly uint bestlag;
             public readonly Dictionary<uint, OLSResult>? regressionResults;
 
             public AutoLagResult(
                 double icbest,
-                double bestlag,
+                uint bestlag,
                 Dictionary<uint, OLSResult>? regressionResults=null
             )
             {
@@ -183,10 +184,11 @@ namespace TimeSeriesStationaryUtils
             uint maxlag,
             AutoLagCriterion criterion,
             bool returnRegressionResults=false,
-            QRMethod qRMethod = QRMethod.Full
+            QRMethod qRMethod = QRMethod.Thin
+            // qRMethod to use, QRMethod.Thin is the fastest
         )
         {
-            double icbest = double.MaxValue;
+            double icbest = double.PositiveInfinity;
             uint bestlag = 0;
             Dictionary<uint, OLSResult> regressionResults = new Dictionary<uint, OLSResult>();
             for (uint lag = startlag; lag <= startlag + maxlag; lag += 1)
@@ -198,7 +200,7 @@ namespace TimeSeriesStationaryUtils
                     columnCount: (int) lag
                 );
                 var ysLag = ys;
-                var olsResult = OLS.Fit(xs: xsLag, ys: ysLag);
+                var olsResult = OLS.Fit(xs: xsLag, ys: ysLag, qRMethod: qRMethod);
                 regressionResults.Add(lag, olsResult);
             }
             switch (criterion)

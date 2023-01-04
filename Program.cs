@@ -3,7 +3,8 @@ using TimeSeriesStationaryUtils;
 
 class Tests
 {
-    double[] sunActivities;
+    public readonly double[] sunActivities;
+    public readonly double[] co2;
 
     private void AlmostEqual(double x, double y, double err = 1e-3)
     {
@@ -55,6 +56,7 @@ class Tests
     public Tests()
     {
         this.sunActivities = LoadSunActivitiesTimeSeries();
+        this.co2 = LoadCO2TimeSeries();
     }
 
     private static double[] LoadSunActivitiesTimeSeries()
@@ -82,6 +84,33 @@ class Tests
             }
         }
         return sunActivities.ToArray();
+    }
+
+    private static double[] LoadCO2TimeSeries()
+    {
+        List<double> co2 = new List<double>();
+        using (var reader = new StreamReader(@"./testing_datasets/co2.csv"))
+        {
+            if (!reader.EndOfStream)
+            {
+                // Skip the first line
+                reader.ReadLine();
+            }
+            while (!reader.EndOfStream)
+            {
+                var line = reader.ReadLine();
+                if (line is not null)
+                {
+                    var values = line.Split(",");
+                    co2.Add(Convert.ToDouble(values.Last()));
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        return co2.ToArray();
     }
 
     public void testKPSSDataStationaryAroundConstant()
@@ -766,11 +795,52 @@ class Tests
         this.testingACFWithAlphaPointQStatAlphaPoint05NonBartlett();
     }
 
+    public void testingADFDefault()
+    {
+        var adfStatistics = TimeSeriesStationaryUtils.ADF.Run(timeSeries: sunActivities);
+        var adfStatisticsExpected = new TimeSeriesStationaryUtils.ADF.ADFStatistic(
+            adfStat: -2.837780724938,
+            pvalue: 0.0530764,
+            usedlag: 8,
+            nobs: 300,
+            mackinnonCritValues: new TimeSeriesStationaryUtils.ADF.MackinnonCritValues(
+                crit1Percent: -3.4523371,
+                crit5Percent: -2.8712,
+                crit10Percent: -2.5719
+            ),
+            icbest: 2430.50034229055
+        );
+        AlmostEqual(adfStatistics.adfStat, adfStatisticsExpected.adfStat);
+        AlmostEqual(adfStatistics.pvalue, adfStatisticsExpected.pvalue);
+        Equal(adfStatistics.usedlag, adfStatisticsExpected.usedlag);
+        Equal(adfStatistics.nobs, adfStatisticsExpected.nobs);
+        AlmostEqual(adfStatistics.mackinnonCritValues.crit1Percent, adfStatisticsExpected.mackinnonCritValues.crit1Percent);
+        AlmostEqual(adfStatistics.mackinnonCritValues.crit5Percent, adfStatisticsExpected.mackinnonCritValues.crit5Percent);
+        AlmostEqual(adfStatistics.mackinnonCritValues.crit10Percent, adfStatisticsExpected.mackinnonCritValues.crit10Percent);
+        Debug.Assert(
+            adfStatistics.icbest != null,
+            message: "icbest value is null, expected some values"
+        );
+        Debug.Assert(
+            adfStatisticsExpected.icbest != null,
+            message: "Unreachable!"
+        );
+        AlmostEqual((double) adfStatistics.icbest, (double) adfStatisticsExpected.icbest);
+    }
+
+    public void testingADF()
+    {
+        Console.WriteLine("Testing ADF");
+        Console.WriteLine(" Testing ADF with default settings");
+        this.testingADFDefault();
+    }
+
     public void run()
     {
         Console.WriteLine("Running Tests");
         this.testingKPSS();
         this.testingACF();
+        this.testingADF();
         Console.WriteLine("All tests passed 👍️");
     }
 }
