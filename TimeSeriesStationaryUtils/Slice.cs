@@ -19,6 +19,11 @@ namespace TimeSeriesStationaryUtils
             this.count = count;
         }
 
+        public uint ElementAt(int index)
+        {
+            return this[(uint) index];
+        }
+
         public uint this[uint index]
         {
             get { return start + (index * step); }
