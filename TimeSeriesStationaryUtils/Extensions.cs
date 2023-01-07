@@ -16,7 +16,7 @@ namespace TimeSeriesStationaryUtils
             }
         }
 
-        public static IEnumerable<T> iterate<T>(
+        public static IEnumerable<T> Iterate<T>(
             Func<T, T> next,
             T state
         )
@@ -220,7 +220,7 @@ namespace TimeSeriesStationaryUtils
 
         public static IEnumerable<double> Powers(double x)
         {
-            return iterate(s =>  s * x, 1.0);
+            return Iterate(s =>  s * x, 1.0);
         }
 
         public static double PolyEval(this IEnumerable<double> coeffs, double x)
@@ -382,6 +382,122 @@ namespace TimeSeriesStationaryUtils
                 );
             }
             return new LagMatResult(lm: lm, nobs: (uint) nobs, nvar: (uint) nvar, maxlag: maxlag);
+        }
+
+        public static SliceView<T[,], uint, T> AsSlice1D<T>(
+            this T[,] array2D,
+            IEnumerable<uint>? rows=null,
+            IEnumerable<uint>? cols=null
+        )
+        {
+            if (rows is null)
+                rows = new Slice(start: (uint) array2D.GetLowerBound(0), count: (uint) array2D.GetLength(0));
+            if (cols is null)
+                cols = new Slice(start: (uint) array2D.GetLowerBound(1), count: (uint) array2D.GetLength(1));
+            var width = cols.Count();
+            var fromIndex = (uint index) => (rows.ElementAt((int) (index / width)), cols.ElementAt((int) (index % width)));
+            var getter = (T[,] values, uint index) => {
+                var (row, col) = fromIndex(index);
+                return values[row, col];
+            };
+            var setter = (T[,] values, uint index, T value) => {
+                var (row, col) = fromIndex(index);
+                values[row, col] = value;
+            };
+            return new SliceView<T[,], uint, T>(array2D, getter, setter);
+        }
+
+        public static SliceView<Matrix<T>, uint, T> AsSlice1D<T>(
+            this Matrix<T> matrix,
+            IEnumerable<uint>? rows=null,
+            IEnumerable<uint>? cols=null
+        )
+        where T : struct, IEquatable<T>, IFormattable
+        {
+            if (rows is null)
+                rows = new Slice(start: 0, count: (uint) matrix.RowCount);
+            if (cols is null)
+                cols = new Slice(start: 0, count: (uint) matrix.ColumnCount);
+            var width = cols.Count();
+            var fromIndex = (uint index) => (rows.ElementAt((int) (index / width)), cols.ElementAt((int) (index % width)));
+            var getter = (Matrix<T> values, uint index) => {
+                var (row, col) = fromIndex(index);
+                return values[(int) row, (int) col];
+            };
+            var setter = (Matrix<T> values, uint index, T value) => {
+                var (row, col) = fromIndex(index);
+                values[(int) row, (int) col] = value;
+            };
+            return new SliceView<Matrix<T>, uint, T>(matrix, getter, setter);
+        }
+
+        public static SliceView<T[], uint, T> AsSlice1D<T>(
+            this T[] array1D,
+            IEnumerable<uint>? indexes=null
+        )
+        {
+            var getter = (T[] values, uint index) =>
+                indexes is null ? values[index] : values[indexes.ElementAt((int) index)];
+            var setter = (T[] values, uint index, T value) => {
+                if (indexes is null)
+                    values[index] = value;
+                else
+                    values[indexes.ElementAt((int) index)] = value;
+            };
+            return new SliceView<T[], uint, T>(array1D, getter, setter);
+        }
+
+        public static SliceView<SliceView<T, uint, U>, uint, U> AsSlice1D<T, U>(
+            this SliceView<T, uint, U> slice1D,
+            IEnumerable<uint>? indexes=null
+        )
+        {
+            var getter = (SliceView<T, uint, U> values, uint index) =>
+                indexes is null ? values[index] : values[indexes.ElementAt((int) index)];
+            var setter = (SliceView<T, uint, U> values, uint index, U value) => {
+                if (indexes is null)
+                    values[index] = value;
+                else
+                    values[indexes.ElementAt((int) index)] = value;
+            };
+            return new SliceView<SliceView<T, uint, U>, uint, U>(slice1D, getter, setter);
+        }
+
+        public static SliceView<T[,], (uint, uint), T> AsSlice2D<T>(
+            this T[,] array2D,
+            IEnumerable<uint>? rows=null,
+            IEnumerable<uint>? cols=null
+        )
+        {
+            if (rows is null)
+                rows = new Slice(start: (uint) array2D.GetLowerBound(0), count: (uint) array2D.GetLength(0));
+            if (cols is null)
+                cols = new Slice(start: (uint) array2D.GetLowerBound(1), count: (uint) array2D.GetLength(1));
+            var getter = (T[,] values, (uint row, uint col) index) =>
+                values[rows.ElementAt((int) index.row), cols.ElementAt((int) index.col)];
+            var setter = (T[,] values, (uint row, uint col) index, T value) => {
+                values[rows.ElementAt((int) index.row), cols.ElementAt((int) index.col)] = value;
+            };
+            return new SliceView<T[,], (uint, uint), T>(array2D, getter, setter);
+        }
+
+        public static SliceView<Matrix<T>, (uint, uint), T> AsSlice2D<T>(
+            this Matrix<T> matrix,
+            IEnumerable<uint>? rows=null,
+            IEnumerable<uint>? cols=null
+        )
+        where T : struct, IEquatable<T>, IFormattable
+        {
+            if (rows is null)
+                rows = new Slice(start: 0, count: (uint) matrix.RowCount);
+            if (cols is null)
+                cols = new Slice(start: 0, count: (uint) matrix.ColumnCount);
+            var getter = (Matrix<T> values, (uint row, uint col) index) =>
+                values[(int) rows.ElementAt((int) index.row), (int) cols.ElementAt((int) index.col)];
+            var setter = (Matrix<T> values, (uint row, uint col) index, T value) => {
+                values[(int) rows.ElementAt((int) index.row), (int) cols.ElementAt((int) index.col)] = value;
+            };
+            return new SliceView<Matrix<T>, (uint, uint), T>(matrix, getter, setter);
         }
     }
 }
